@@ -1,15 +1,34 @@
+using MongoDB.Driver;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Adiciona a configuração do MongoDB a partir do appsettings.json
+var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDb");
+
+// Registra o serviço MongoDB
+builder.Services.AddSingleton<IMongoClient>(sp => new MongoClient(mongoConnectionString));
+
+// Adiciona Razor Pages
 builder.Services.AddRazorPages();
+
+// Adiciona Swagger
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+// Configura o middleware Swagger apenas no ambiente de desenvolvimento
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Minha API v1");
+        c.RoutePrefix = string.Empty; // Define a página inicial do Swagger em "/"
+    });
+}
+else
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
