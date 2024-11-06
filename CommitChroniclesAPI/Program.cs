@@ -1,3 +1,8 @@
+using CommitChroniclesAPI.Services;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Options;
+using MongoDB.Bson.Serialization.Serializers;
 using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,7 +13,26 @@ var mongoConnectionString = builder.Configuration.GetConnectionString("MongoDb")
 // Registra o serviço MongoDB
 builder.Services.AddSingleton<IMongoClient>(sp => new MongoClient(mongoConnectionString));
 
-// Adiciona Razor Pages
+// Registra o JogadorService
+builder.Services.AddSingleton<JogadorService>();
+
+// Configura o GuidSerializer para representar GUIDs de forma correta
+BsonSerializer.RegisterSerializer(typeof(Guid), new GuidSerializer(GuidRepresentation.Standard));
+
+// Adiciona o CORS antes de qualquer outro serviço que precise
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
+});
+
+// Adiciona Controllers e Razor Pages
+builder.Services.AddControllers(); // Adiciona suporte para controllers
 builder.Services.AddRazorPages();
 
 // Adiciona Swagger
@@ -35,10 +59,13 @@ else
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+// Use o CORS antes do roteamento
 app.UseRouting();
-
+app.UseCors("AllowAll");
 app.UseAuthorization();
 
+// Mapeia endpoints das controllers e Razor Pages
+app.MapControllers(); // Mapeia os endpoints das controllers
 app.MapRazorPages();
 
 app.Run();

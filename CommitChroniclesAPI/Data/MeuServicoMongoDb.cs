@@ -11,7 +11,7 @@ namespace CommitChroniclesAPI.Data
         public MeuServicoMongoDb(IMongoClient client)
         {
             _client = client;
-            _database = _client.GetDatabase("CommitChronicles");
+            _database = _client.GetDatabase("CommitChronicles_db");
         }
 
         public IMongoCollection<BsonDocument> MinhaColecao => _database.GetCollection<BsonDocument>("MinhaColecao");
