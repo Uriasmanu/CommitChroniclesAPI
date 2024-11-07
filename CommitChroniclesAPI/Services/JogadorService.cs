@@ -13,47 +13,75 @@ namespace CommitChroniclesAPI.Services
             _jogadoresCollection = database.GetCollection<Jogador>("Jogadores");
         }
 
-        // Método para adicionar um novo jogador
-        public async Task AdicionarJogadorAsync(Jogador jogador)
+        // Método para adicionar um novo jogador (usando DTO)
+        public async Task AdicionarJogadorAsync(JogadorDTO jogadorDTO)
         {
             // Verificar se já existe um jogador com o mesmo UserEmail
-            var jogadorExistente = await _jogadoresCollection.Find(j => j.UserEmail == jogador.UserEmail).FirstOrDefaultAsync();
+            var jogadorExistente = await _jogadoresCollection.Find(j => j.UserEmail == jogadorDTO.UserEmail).FirstOrDefaultAsync();
             if (jogadorExistente != null)
             {
-                throw new InvalidOperationException($"O e-mail '{jogador.UserEmail}' já está em uso.");
+                throw new InvalidOperationException($"O e-mail '{jogadorDTO.UserEmail}' já está em uso.");
             }
 
-            // Caso o jogador não tenha um ID, gerar um novo Guid
-            if (jogador.Id == Guid.Empty)
+            // Converter o DTO para o modelo Jogador
+            var jogador = new Jogador
             {
-                jogador.Id = Guid.NewGuid();
-            }
+                Id = Guid.NewGuid(),
+                UserName = jogadorDTO.UserName,
+                UserEmail = jogadorDTO.UserEmail,
+                Nivel = 0 // Pode ser ajustado se necessário
+            };
 
             // Inserir o jogador na coleção
             await _jogadoresCollection.InsertOneAsync(jogador);
         }
 
-
-        // Método para buscar todos os jogadores
-        public async Task<List<Jogador>> ObterTodosJogadoresAsync()
+        // Método para buscar todos jogadores (retornando DTOs)
+        public async Task<List<JogadorDTO>> ObterTodosJogadoresAsync()
         {
-            return await _jogadoresCollection.Find(j => true).ToListAsync();
+            var jogadores = await _jogadoresCollection.Find(j => true).ToListAsync();
+
+            // Converter lista de jogadores para DTOs
+            var jogadoresDTO = jogadores.Select(j => new JogadorDTO
+            {
+                UserName = j.UserName,
+                UserEmail = j.UserEmail
+            }).ToList();
+
+            return jogadoresDTO;
         }
 
-        // Método para buscar um jogador por ID
-        public async Task<Jogador> ObterJogadorPorIdAsync(Guid id)
+        // Método para buscar um jogador por ID (retornando DTO)
+        public async Task<JogadorDTO> ObterJogadorPorIdAsync(Guid id)
         {
             var jogador = await _jogadoresCollection.Find(j => j.Id == id).FirstOrDefaultAsync();
             if (jogador == null)
             {
                 throw new KeyNotFoundException($"Jogador com o ID '{id}' não foi encontrado.");
             }
-            return jogador;
+
+            // Converter jogador para DTO
+            var jogadorDTO = new JogadorDTO
+            {
+                UserName = jogador.UserName,
+                UserEmail = jogador.UserEmail
+            };
+
+            return jogadorDTO;
         }
 
-        // Método para atualizar um jogador
-        public async Task AtualizarJogadorAsync(Guid id, Jogador jogadorAtualizado)
+        // Método para atualizar um jogador (usando DTO)
+        public async Task AtualizarJogadorAsync(Guid id, JogadorDTO jogadorDTO)
         {
+            // Converter o DTO para o modelo Jogador
+            var jogadorAtualizado = new Jogador
+            {
+                Id = id,
+                UserName = jogadorDTO.UserName,
+                UserEmail = jogadorDTO.UserEmail,
+                Nivel = 0 // Pode ser ajustado se necessário
+            };
+
             var resultado = await _jogadoresCollection.ReplaceOneAsync(j => j.Id == id, jogadorAtualizado);
             if (resultado.MatchedCount == 0)
             {

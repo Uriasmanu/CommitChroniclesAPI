@@ -1,45 +1,46 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using CommitChroniclesAPI.Services;
+﻿using CommitChroniclesAPI.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CommitChroniclesAPI.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
-    public class JogadorController : ControllerBase
+    [ApiController]
+    public class JogadoresController : ControllerBase
     {
         private readonly JogadorService _jogadorService;
 
-        public JogadorController(JogadorService jogadorService)
+        // Injeção de dependência do JogadorService
+        public JogadoresController(JogadorService jogadorService)
         {
             _jogadorService = jogadorService;
         }
 
-        // Endpoint para adicionar um novo jogador
+        // POST: api/jogadores
         [HttpPost]
-        public async Task<IActionResult> AdicionarJogador([FromBody] Jogador jogador)
+        public async Task<IActionResult> AdicionarJogador(JogadorDTO jogadorDTO)
         {
             try
             {
-                await _jogadorService.AdicionarJogadorAsync(jogador);
-                return CreatedAtAction(nameof(ObterJogadorPorId), new { id = jogador.Id }, jogador);
+                await _jogadorService.AdicionarJogadorAsync(jogadorDTO);
+                return CreatedAtAction(nameof(ObterJogadorPorId), new { id = jogadorDTO.UserEmail }, jogadorDTO);
             }
             catch (InvalidOperationException ex)
             {
-                return Conflict(new { message = ex.Message });
+                return Conflict(new { mensagem = ex.Message });
             }
         }
 
-        // Endpoint para buscar todos os jogadores
+        // GET: api/jogadores
         [HttpGet]
-        public async Task<ActionResult<List<Jogador>>> ObterTodosJogadores()
+        public async Task<ActionResult<List<JogadorDTO>>> ObterJogadores()
         {
             var jogadores = await _jogadorService.ObterTodosJogadoresAsync();
             return Ok(jogadores);
         }
 
-        // Endpoint para buscar um jogador por ID
-        [HttpGet("{id:guid}")]
-        public async Task<ActionResult<Jogador>> ObterJogadorPorId(Guid id)
+        // GET: api/jogadores/{id}
+        [HttpGet("{id}")]
+        public async Task<ActionResult<JogadorDTO>> ObterJogadorPorId(Guid id)
         {
             try
             {
@@ -48,27 +49,27 @@ namespace CommitChroniclesAPI.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(new { mensagem = ex.Message });
             }
         }
 
-        // Endpoint para atualizar um jogador por ID
-        [HttpPut("{id:guid}")]
-        public async Task<IActionResult> AtualizarJogador(Guid id, [FromBody] Jogador jogadorAtualizado)
+        // PUT: api/jogadores/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> AtualizarJogador(Guid id, JogadorDTO jogadorDTO)
         {
             try
             {
-                await _jogadorService.AtualizarJogadorAsync(id, jogadorAtualizado);
+                await _jogadorService.AtualizarJogadorAsync(id, jogadorDTO);
                 return NoContent();
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(new { mensagem = ex.Message });
             }
         }
 
-        // Endpoint para remover um jogador por ID
-        [HttpDelete("{id:guid}")]
+        // DELETE: api/jogadores/{id}
+        [HttpDelete("{id}")]
         public async Task<IActionResult> RemoverJogador(Guid id)
         {
             try
@@ -78,7 +79,7 @@ namespace CommitChroniclesAPI.Controllers
             }
             catch (KeyNotFoundException ex)
             {
-                return NotFound(new { message = ex.Message });
+                return NotFound(new { mensagem = ex.Message });
             }
         }
     }
