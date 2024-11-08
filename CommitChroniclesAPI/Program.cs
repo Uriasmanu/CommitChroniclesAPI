@@ -62,6 +62,7 @@ app.UseStaticFiles();
 // Use o CORS antes do roteamento
 app.UseRouting();
 app.UseCors("AllowAll");
+
 app.UseAuthorization();
 
 // Mapeia endpoints das controllers e Razor Pages
