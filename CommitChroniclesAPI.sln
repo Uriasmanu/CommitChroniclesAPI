@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommitChroniclesAPI", "CommitChroniclesAPI\CommitChroniclesAPI.csproj", "{8705E96D-2B42-4AD6-A868-35509EBC3903}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommitChroniclesAPI.Tests", "CommitChroniclesAPI.Tests\CommitChroniclesAPI.Tests.csproj", "{9829544D-28D7-4891-B7DD-656995976974}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommitChroniclesAPI", "CommitChroniclesAPI\CommitChroniclesAPI.csproj", "{8705E96D-2B42-4AD6-A868-35509EBC3903}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +15,6 @@ Global
 		{8705E96D-2B42-4AD6-A868-35509EBC3903}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8705E96D-2B42-4AD6-A868-35509EBC3903}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8705E96D-2B42-4AD6-A868-35509EBC3903}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9829544D-28D7-4891-B7DD-656995976974}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9829544D-28D7-4891-B7DD-656995976974}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9829544D-28D7-4891-B7DD-656995976974}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9829544D-28D7-4891-B7DD-656995976974}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

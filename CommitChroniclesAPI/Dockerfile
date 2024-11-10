@@ -1,33 +1,24 @@
-# Acesse https://aka.ms/customizecontainer para saber como personalizar seu contêiner de depuração e como o Visual Studio usa este Dockerfile para criar suas imagens para uma depuração mais rápida.
+# Etapa de Build (com SDK)
+FROM mcr.microsoft.com/dotnet/sdk:8.0-windowsservercore-ltsc2019 AS build
+WORKDIR /src
 
-# Dependendo do sistema operacional dos computadores host que compilarão ou executarão os contêineres, a imagem especificada na instrução FROM pode precisar ser alterada.
-# Para obter mais informações, consulte https://aka.ms/containercompat.
+# Copia o arquivo .csproj e restaura dependências
+COPY *.csproj ./ 
+RUN dotnet restore
 
-# Esta fase é usada durante a execução no VS no modo rápido (Padrão para a configuração de Depuração)
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-nanoserver-1809 AS base
+# Copia todo o código-fonte e realiza o build da aplicação
+COPY . . 
+RUN dotnet publish -c Release -o /app/publish
+
+# Etapa de Runtime (somente o runtime, mais leve)
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-windowsservercore-ltsc2019 AS runtime
 WORKDIR /app
-EXPOSE 8080
+COPY --from=build /app/publish .
+
+# Expõe a porta 8080 (a porta em que a aplicação estará ouvindo)
+ENV ASPNETCORE_URLS=http://+:8081
 EXPOSE 8081
 
 
-# Esta fase é usada para compilar o projeto de serviço
-FROM mcr.microsoft.com/dotnet/sdk:8.0-nanoserver-1809 AS build
-ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["CommitChroniclesAPI/CommitChroniclesAPI.csproj", "CommitChroniclesAPI/"]
-COPY ["CommitChroniclesAPI.Tests/CommitChroniclesAPI.Tests.csproj", "CommitChroniclesAPI.Tests/"]
-RUN dotnet restore "./CommitChroniclesAPI/CommitChroniclesAPI.csproj"
-COPY . .
-WORKDIR "/src/CommitChroniclesAPI"
-RUN dotnet build "./CommitChroniclesAPI.csproj" -c %BUILD_CONFIGURATION% -o /app/build
-
-# Esta fase é usada para publicar o projeto de serviço a ser copiado para a fase final
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./CommitChroniclesAPI.csproj" -c %BUILD_CONFIGURATION% -o /app/publish /p:UseAppHost=false
-
-# Esta fase é usada na produção ou quando executada no VS no modo normal (padrão quando não está usando a configuração de Depuração)
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
+# Define o comando para iniciar a aplicação
 ENTRYPOINT ["dotnet", "CommitChroniclesAPI.dll"]
