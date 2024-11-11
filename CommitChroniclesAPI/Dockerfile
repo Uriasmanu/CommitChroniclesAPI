@@ -18,7 +18,3 @@ COPY --from=build /app/publish .
 # Expõe a porta 8080 (a porta em que a aplicação estará ouvindo)
 ENV ASPNETCORE_URLS=http://+:8081
 EXPOSE 8081
-
-
-# Define o comando para iniciar a aplicação
-ENTRYPOINT ["dotnet", "CommitChroniclesAPI.dll"]
