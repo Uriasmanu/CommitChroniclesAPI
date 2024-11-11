@@ -1,16 +1,63 @@
-﻿using MongoDB.Driver;
+﻿using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace CommitChroniclesAPI.Services
 {
     public class JogadorService
     {
         private readonly IMongoCollection<Jogador> _jogadoresCollection;
+        private readonly string _chaveSecreta;
 
-        public JogadorService(IMongoClient client)
+        public JogadorService(IMongoClient client, IConfiguration configuration)
         {
-            // Acessa o banco "CommitChronicles" e a coleção "Jogadores"
             var database = client.GetDatabase("CommitChronicles");
             _jogadoresCollection = database.GetCollection<Jogador>("Jogadores");
+            _chaveSecreta = configuration["ChaveSecreta"];
+        }
+
+        // Método para logar um jogador
+        public async Task<string> LogarJogadorAsync(JogadorDTO jogadorDTO)
+        {
+            var jogador = await _jogadoresCollection
+                .Find(j => j.UserEmail == jogadorDTO.UserEmail && j.UserName == jogadorDTO.UserName)
+                .FirstOrDefaultAsync();
+
+            if (jogador == null)
+            {
+                throw new InvalidOperationException("Credenciais inválidas. Tente novamente.");
+            }
+
+            // Gerar o token JWT
+            var token = GerarToken(jogador);
+
+            return token; // Retorna o token gerado
+        }
+
+        // Método para gerar o token JWT
+        private string GerarToken(Jogador jogador)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, jogador.Id.ToString()),
+                new Claim(ClaimTypes.Name, jogador.UserName),
+                new Claim(ClaimTypes.Email, jogador.UserEmail)
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_chaveSecreta));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: "system_tasks",
+                audience: "seus_usuarios",
+                claims: claims,
+                expires: DateTime.Now.AddHours(1),
+                signingCredentials: creds
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token); // Gera o token JWT como string
         }
 
         // Método para adicionar um novo jogador (usando DTO)

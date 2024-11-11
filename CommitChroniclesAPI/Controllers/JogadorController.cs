@@ -15,6 +15,23 @@ namespace CommitChroniclesAPI.Controllers
             _jogadorService = jogadorService;
         }
 
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] JogadorDTO jogadorDTO)
+        {
+            try
+            {
+                // Chama o serviço para fazer login e obter o token
+                var token = await _jogadorService.LogarJogadorAsync(jogadorDTO);
+
+                // Retorna o token com uma mensagem de sucesso
+                return Ok(new { Message = "Login realizado com sucesso", Token = token });
+            }
+            catch (Exception ex)
+            {
+                return Unauthorized(new { Message = ex.Message });
+            }
+        }
+
         // POST: api/jogadores
         [HttpPost]
         public async Task<IActionResult> AdicionarJogador(JogadorDTO jogadorDTO)
