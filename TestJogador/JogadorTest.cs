@@ -6,6 +6,8 @@ using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace TestJogador
 {
@@ -35,9 +37,89 @@ namespace TestJogador
 
             // Instancia o serviço usando os mocks
             var mockConfig = new Mock<IConfiguration>();
-            mockConfig.Setup(c => c["ChaveSecreta"]).Returns("uma-chave-secreta");
+            mockConfig.Setup(c => c["ChaveSecreta"]).Returns("super-secreta-chave-com-32-caracteres!");
             _jogadorService = new JogadorService(_mockClient.Object, mockConfig.Object);
         }
+
+        [Fact]
+        public async Task LogarJogadorAsync_DeveRetornarToken_QuandoCredenciaisCorretas()
+        {
+            // Arrange
+            var jogadorDTO = new JogadorDTO
+            {
+                UserName = "JogadorCorreto",
+                UserEmail = "email@correto.com"
+            };
+
+            var jogadorExistente = new Jogador
+            {
+                Id = Guid.NewGuid(),
+                UserName = jogadorDTO.UserName,
+                UserEmail = jogadorDTO.UserEmail
+            };
+
+            // Configura o cursor para simular que o jogador foi encontrado
+            _mockCursor.Setup(c => c.Current).Returns(new List<Jogador> { jogadorExistente });
+            _mockCursor
+                .SetupSequence(c => c.MoveNextAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true)
+                .ReturnsAsync(false);
+
+            _mockJogadoresCollection
+                .Setup(c => c.FindAsync(
+                    It.IsAny<FilterDefinition<Jogador>>(),
+                    It.IsAny<FindOptions<Jogador>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(_mockCursor.Object);
+
+            // Act
+            var token = await _jogadorService.LogarJogadorAsync(jogadorDTO);
+
+            // Assert
+            Assert.NotNull(token); // Verifica se o token foi gerado
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token);
+            Assert.Equal(jogadorExistente.Id.ToString(), jwtToken.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value);
+            Assert.Equal(jogadorExistente.UserName, jwtToken.Claims.First(c => c.Type == ClaimTypes.Name).Value);
+            Assert.Equal(jogadorExistente.UserEmail, jwtToken.Claims.First(c => c.Type == ClaimTypes.Email).Value);
+        }
+
+        [Fact]
+        public async Task LogarJogadorAsync_DeveLancarExcecao_QuandoCredenciaisInvalidas()
+        {
+            // Arrange
+            var jogadorDTO = new JogadorDTO
+            {
+                UserName = "JogadorInvalido",
+                UserEmail = "email@invalido.com"
+            };
+
+            // Configura o cursor para simular que nenhum jogador foi encontrado
+            _mockCursor.Setup(c => c.Current).Returns(new List<Jogador>());
+            _mockCursor.SetupSequence(c => c.MoveNextAsync(It.IsAny<CancellationToken>()))
+                       .ReturnsAsync(false);
+
+            _mockJogadoresCollection
+                .Setup(c => c.FindAsync(
+                    It.IsAny<FilterDefinition<Jogador>>(),
+                    It.IsAny<FindOptions<Jogador>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(_mockCursor.Object);
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                _jogadorService.LogarJogadorAsync(jogadorDTO));
+
+            Assert.Equal("Credenciais inválidas. Tente novamente.", exception.Message);
+
+            _mockJogadoresCollection.Verify(
+                c => c.FindAsync(
+                    It.IsAny<FilterDefinition<Jogador>>(),
+                    It.IsAny<FindOptions<Jogador>>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Once); // Garante que a busca foi realizada
+        }
+
 
         [Fact]
         public async Task AdicionarJogadorAsync_DeveInserirJogador_QuandoEmailNaoExiste()
