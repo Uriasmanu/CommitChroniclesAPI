@@ -5,6 +5,13 @@ VisualStudioVersion = 17.11.35312.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommitChroniclesAPI", "CommitChroniclesAPI\CommitChroniclesAPI.csproj", "{8705E96D-2B42-4AD6-A868-35509EBC3903}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testes", "Testes", "{7868A5AD-B6E0-44A5-B54A-D12276EF3AB8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommitChroniclesTest", "TestJogador\CommitChroniclesTest.csproj", "{311C5220-C8E6-4A28-B489-4CD68731A621}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8705E96D-2B42-4AD6-A868-35509EBC3903} = {8705E96D-2B42-4AD6-A868-35509EBC3903}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,9 +22,16 @@ Global
 		{8705E96D-2B42-4AD6-A868-35509EBC3903}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8705E96D-2B42-4AD6-A868-35509EBC3903}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8705E96D-2B42-4AD6-A868-35509EBC3903}.Release|Any CPU.Build.0 = Release|Any CPU
+		{311C5220-C8E6-4A28-B489-4CD68731A621}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{311C5220-C8E6-4A28-B489-4CD68731A621}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{311C5220-C8E6-4A28-B489-4CD68731A621}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{311C5220-C8E6-4A28-B489-4CD68731A621}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{311C5220-C8E6-4A28-B489-4CD68731A621} = {7868A5AD-B6E0-44A5-B54A-D12276EF3AB8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B352B909-3DBC-44B0-B5A0-8C76D61A232D}
