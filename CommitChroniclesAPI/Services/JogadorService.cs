@@ -145,5 +145,7 @@ namespace CommitChroniclesAPI.Services
                 throw new KeyNotFoundException($"Jogador com o ID '{id}' não foi encontrado para remoção.");
             }
         }
+
+
     }
 }

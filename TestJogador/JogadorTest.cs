@@ -3,6 +3,9 @@ using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using Moq;
 using Xunit;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace TestJogador
 {
@@ -69,6 +72,99 @@ namespace TestJogador
                     null,
                     default),
                 Times.Once);
+        }
+
+        [Fact]
+        public async Task AdicionarJogadorAsync_DeveRecusarJogador_QuandoEmailJaExiste()
+        {
+            // Arrange
+            var jogadorDTO = new JogadorDTO
+            {
+                UserName = "JogadorExistente",
+                UserEmail = "email@existente.com"
+            };
+
+            var jogadorExistente = new Jogador
+            {
+                UserName = "OutroJogador",
+                UserEmail = "email@existente.com"
+            };
+
+            // Configura o cursor para simular que o e-mail já existe
+            _mockCursor.Setup(c => c.Current).Returns(new List<Jogador> { jogadorExistente });
+            _mockCursor
+                .SetupSequence(c => c.MoveNextAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(true)
+                .ReturnsAsync(false);
+
+            _mockJogadoresCollection
+                .Setup(c => c.FindAsync(
+                    It.IsAny<FilterDefinition<Jogador>>(),
+                    It.IsAny<FindOptions<Jogador>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(_mockCursor.Object);
+
+            // Act
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                _jogadorService.AdicionarJogadorAsync(jogadorDTO));
+
+            // Assert
+            _mockJogadoresCollection.Verify(
+                c => c.InsertOneAsync(
+                    It.IsAny<Jogador>(),
+                    null,
+                    default),
+                Times.Never); // Garante que nenhum jogador foi inserido
+        }
+
+        [Fact]
+        public async Task RemoverJogadorAsync_DeveRemoverJogador_QuandoIdExiste()
+        {
+            // Arrange
+            var jogadorId = Guid.NewGuid();
+
+            _mockJogadoresCollection
+                .Setup(c => c.DeleteOneAsync(
+                    It.IsAny<FilterDefinition<Jogador>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new DeleteResult.Acknowledged(1));
+
+            // Act
+            await _jogadorService.RemoverJogadorAsync(jogadorId);
+
+            // Assert
+            _mockJogadoresCollection.Verify(
+                c => c.DeleteOneAsync(
+                    It.IsAny<FilterDefinition<Jogador>>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+
+        [Fact]
+        public async Task RemoverJogadorAsync_DeveLancarExcecao_QuandoIdNaoExiste()
+        {
+            // Arrange
+            var jogadorId = Guid.NewGuid();
+
+            // Configuração para simular que nenhum documento foi removido
+            _mockJogadoresCollection
+                .Setup(c => c.DeleteOneAsync(
+                    It.IsAny<FilterDefinition<Jogador>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new DeleteResult.Acknowledged(0)); // Simula que 0 documentos foram removidos
+
+            // Act & Assert
+            var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+                _jogadorService.RemoverJogadorAsync(jogadorId));
+
+            Assert.Equal($"Jogador com o ID '{jogadorId}' não foi encontrado para remoção.", exception.Message);
+
+            _mockJogadoresCollection.Verify(
+                c => c.DeleteOneAsync(
+                    It.IsAny<FilterDefinition<Jogador>>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Once); // Garante que a tentativa de exclusão foi feita
         }
     }
 }
