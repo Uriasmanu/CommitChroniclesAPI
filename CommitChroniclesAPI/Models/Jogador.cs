@@ -7,4 +7,7 @@ public class Jogador
     public string UserName { get; set; }
     public string UserEmail { get; set; }
     public int Nivel { get; set; } = 1;
+    public int Experiencia { get; set; };
+
+
 }
