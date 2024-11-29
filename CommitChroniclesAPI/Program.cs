@@ -18,6 +18,8 @@ builder.Services.AddSingleton<IMongoClient>(sp => new MongoClient(mongoConnectio
 
 // Registra o JogadorService
 builder.Services.AddSingleton<JogadorService>();
+builder.Services.AddSingleton<MissaoService>();
+
 
 // Configura o GuidSerializer para representar GUIDs de forma correta
 BsonSerializer.RegisterSerializer(typeof(Guid), new GuidSerializer(GuidRepresentation.Standard));

@@ -25,6 +25,14 @@ namespace CommitChroniclesTest
             _mockDatabase = new Mock<IMongoDatabase>();
             _mockMissoesCollection = new Mock<IMongoCollection<Missao>>();
             _mockCursor = new Mock<IAsyncCursor<Missao>>();
+
+            // Configuração do mock do client para retornar o database mockado
+            _mockClient.Setup(c => c.GetDatabase("CommitChronicles", null))
+                       .Returns(_mockDatabase.Object);
+
+            // Configuração do mock do database para retornar a coleção mockada
+            _mockDatabase.Setup(d => d.GetCollection<Missao>("Missoes", null))
+                         .Returns(_mockMissoesCollection.Object);
         }
     }
 }
